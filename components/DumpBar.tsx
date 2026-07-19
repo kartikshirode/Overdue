@@ -28,12 +28,14 @@ export function DumpBar() {
 
     try {
       await ingest(trimmedDump);
-      const nextTaskCount = useStore.getState().tasks.length;
+      const { tasks, ingestError } = useStore.getState();
 
-      if (nextTaskCount > taskCount) {
+      if (tasks.length > taskCount) {
         setDump("");
       } else {
-        setMessage("No tasks came back. Try naming one thing plainly.");
+        setMessage(
+          ingestError ?? "No tasks came back. Try naming one thing plainly.",
+        );
       }
     } finally {
       setIsExtracting(false);

@@ -1,5 +1,5 @@
 import { TaskCandidateSchema, type TaskCandidate } from "../schema";
-import { CALL_SETTINGS, MODEL, openai } from "./client";
+import { CALL_SETTINGS, MODEL, getOpenAI } from "./client";
 
 const SYSTEM_PROMPT = `You extract avoided real-world tasks from user text.
 
@@ -33,7 +33,7 @@ function candidateValues(value: unknown): unknown[] {
 }
 
 export async function extractTasks(dump: string): Promise<TaskCandidate[]> {
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAI().chat.completions.create({
     model: MODEL,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
