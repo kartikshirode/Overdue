@@ -222,4 +222,5 @@ Template for MODEL_API_KEY and MODEL_BASE_URL, with the GitHub Models endpoint p
 Operating rules for the implementation agent: no git, follow the plan, model settings, safety invariants.
 
 ### docs/
-Vision doc, design spec, implementation plan, design direction, Build Week context, and the submission checklist.
+Vision doc, design spec, implementation plan, design direction, Build Week context, submission checklist, and the build log.
+Gotcha: `docs/build-log.md` records the non-obvious constraints (the MODEL_ env naming and why, GPT-5 reasoning-token behaviour, rate-limit-driven demo design). Read it before changing model wiring or env var names.
