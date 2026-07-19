@@ -87,3 +87,42 @@
 .font-mono {
   font-family: var(--font-mono), monospace;
 }
+
+@keyframes queue-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.4rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.queue-card-enter {
+  animation: queue-card-enter 220ms ease-out both;
+  animation-delay: var(--queue-delay, 0ms);
+}
+
+.task-card {
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.task-card-resolved {
+  transform: scale(0.99);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .queue-card-enter {
+    animation: none;
+  }
+
+  .task-card {
+    transition: none;
+  }
+}

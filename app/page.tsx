@@ -30,8 +30,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-paper text-ink">
       <header className="border-b border-line">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-5 sm:px-8">
-          <span className="font-mono text-sm font-semibold tracking-[0.2em]">
+        <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
+          <span className="shrink-0 font-mono text-sm font-semibold tracking-[0.2em]">
             OVERDUE
           </span>
           <TimeTravelControl />

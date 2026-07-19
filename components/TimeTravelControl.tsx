@@ -33,7 +33,7 @@ export function TimeTravelControl() {
   }
 
   return (
-    <div className="flex items-center gap-2 font-mono">
+    <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 font-mono">
       <time
         dateTime={simulatedDate ?? undefined}
         className="text-[0.625rem] uppercase tracking-[0.06em] text-muted"
