@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { X } from "lucide-react";
 
 import { ApprovalGate } from "@/components/ApprovalGate";
+import { EscalationTimeline } from "@/components/EscalationTimeline";
 import { StageMeter } from "@/components/ui/StageMeter";
 import { StateStamp } from "@/components/ui/StateStamp";
 import type { Artifact, LeverageItem, Provenance } from "@/lib/schema";
@@ -151,6 +152,10 @@ export function ReviewCard({ task, onClose }: ReviewCardProps) {
             <X aria-hidden="true" className="size-4" />
           </button>
         </header>
+
+        <div className="border-b border-line bg-paper/60 px-5 py-4 sm:px-6">
+          <EscalationTimeline stage={task.escalation_stage} />
+        </div>
 
         <div className="space-y-7 px-5 py-6 sm:px-6">
           <section aria-labelledby="draft-heading">
