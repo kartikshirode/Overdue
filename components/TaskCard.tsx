@@ -33,8 +33,9 @@ export function TaskCard({ task, onReview }: TaskCardProps) {
   return (
     <article
       className={cn(
-        "rounded-sm border border-line bg-card px-4 py-4 transition-colors sm:px-5",
-        isResolved && "border-pine/30 bg-pine/5 opacity-65",
+        "task-card min-w-0 rounded-sm border border-line bg-card px-4 py-4 sm:px-5",
+        isResolved &&
+          "task-card-resolved border-pine/30 bg-pine/5 opacity-65",
         isArchived && "bg-paper opacity-50",
       )}
     >
@@ -53,13 +54,14 @@ export function TaskCard({ task, onReview }: TaskCardProps) {
           <h2
             className={cn(
               "text-base font-semibold leading-6 text-ink",
+              "break-words [overflow-wrap:anywhere]",
               isResolved && "text-pine line-through",
               isArchived && "text-muted",
             )}
           >
             {title}
           </h2>
-          <p className="mt-1 font-mono text-[0.6875rem] leading-5 text-muted">
+          <p className="mt-1 break-words font-mono text-[0.6875rem] leading-5 text-muted [overflow-wrap:anywhere]">
             {formatIntent(task.intent)} - {recipient}
           </p>
           {task.state === "awaiting_reply" && task.next_action_at ? (

@@ -26,6 +26,7 @@ const DAY_MS = 86_400_000;
 
 export type StoredTask = Task & {
   artifact?: Artifact;
+  artifactError?: boolean;
   inFlightStage?: EscalationStage | null;
 };
 
@@ -116,6 +117,27 @@ export const useStore = create<OverdueStore>()(
           return;
         }
 
+        const stage = task.escalation_stage;
+        const markArtifactError = () => {
+          set((state) => ({
+            tasks: state.tasks.map((item) =>
+              item.id === taskId &&
+              item.escalation_stage === stage &&
+              !item.artifact
+                ? { ...item, artifactError: true }
+                : item,
+            ),
+          }));
+        };
+
+        set((state) => ({
+          tasks: state.tasks.map((item) =>
+            item.id === taskId && !item.artifact
+              ? { ...item, artifactError: false }
+              : item,
+          ),
+        }));
+
         try {
           const apiTask = TaskSchema.parse(task);
           const payload = await postJson("/api/artifact", {
@@ -130,6 +152,7 @@ export const useStore = create<OverdueStore>()(
             parsed.data.stage !== task.escalation_stage ||
             parsed.data.artifact_type !== task.artifact_type
           ) {
+            markArtifactError();
             return;
           }
 
@@ -138,11 +161,12 @@ export const useStore = create<OverdueStore>()(
               item.id === taskId &&
               item.escalation_stage === parsed.data.stage &&
               !item.artifact
-                ? { ...item, artifact: parsed.data }
+                ? { ...item, artifact: parsed.data, artifactError: false }
                 : item,
             ),
           }));
         } catch {
+          markArtifactError();
           return;
         }
       },
@@ -219,7 +243,12 @@ export const useStore = create<OverdueStore>()(
           const stored = { ...previous, ...task };
 
           return escalated.has(task.id)
-            ? { ...stored, artifact: undefined, inFlightStage: null }
+            ? {
+                ...stored,
+                artifact: undefined,
+                artifactError: false,
+                inFlightStage: null,
+              }
             : stored;
         });
 

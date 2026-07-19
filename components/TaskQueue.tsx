@@ -1,4 +1,5 @@
 import { TaskCard } from "@/components/TaskCard";
+import type { CSSProperties } from "react";
 import type { TaskState } from "@/lib/schema";
 import type { StoredTask } from "@/lib/store";
 
@@ -85,8 +86,18 @@ export function TaskQueue({ tasks, onReview }: TaskQueueProps) {
       </div>
 
       <div className="space-y-3">
-        {sortedTasks.map((task) => (
-          <TaskCard key={task.id} task={task} onReview={onReview} />
+        {sortedTasks.map((task, index) => (
+          <div
+            key={task.id}
+            className="queue-card-enter"
+            style={
+              {
+                "--queue-delay": `${Math.min(index, 6) * 45}ms`,
+              } as CSSProperties
+            }
+          >
+            <TaskCard task={task} onReview={onReview} />
+          </div>
         ))}
       </div>
     </section>

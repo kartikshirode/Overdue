@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 import { ApprovalGate } from "@/components/ApprovalGate";
@@ -95,15 +95,49 @@ function readableField(value: string): string {
 }
 
 export function ReviewCard({ task, onClose }: ReviewCardProps) {
+  const dialogRef = useRef<HTMLElement>(null);
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) {
+        return;
+      }
+
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      const first = focusable[0];
+      const last = focusable.at(-1);
+
+      if (!first || !last) {
+        event.preventDefault();
+        dialogRef.current.focus();
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     }
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [onClose]);
 
   const artifact = task.artifact;
@@ -115,7 +149,7 @@ export function ReviewCard({ task, onClose }: ReviewCardProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/45 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/45 p-3 sm:items-center sm:p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
@@ -123,10 +157,12 @@ export function ReviewCard({ task, onClose }: ReviewCardProps) {
       }}
     >
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="review-title"
-        className="relative max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-sm border border-line bg-card shadow-xl"
+        tabIndex={-1}
+        className="relative max-h-[calc(100dvh-1.5rem)] w-full min-w-0 max-w-2xl overflow-y-auto rounded-sm border border-line bg-card shadow-xl sm:max-h-[calc(100dvh-2rem)]"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <h1 id="review-title" className="sr-only">
@@ -147,6 +183,7 @@ export function ReviewCard({ task, onClose }: ReviewCardProps) {
             type="button"
             onClick={onClose}
             aria-label="Close review"
+            autoFocus
             className="absolute right-4 top-3.5 inline-flex size-8 items-center justify-center rounded-sm border border-line bg-paper text-muted transition-colors hover:text-ink"
           >
             <X aria-hidden="true" className="size-4" />
@@ -167,8 +204,14 @@ export function ReviewCard({ task, onClose }: ReviewCardProps) {
             </h2>
 
             {!artifact ? (
-              <p className="mt-4 rounded-sm border border-line bg-paper px-4 py-5 text-sm text-muted">
-                Drafting...
+              <p
+                className="mt-4 rounded-sm border border-line bg-paper px-4 py-5 text-sm text-muted"
+                role="status"
+                aria-live="polite"
+              >
+                {task.artifactError
+                  ? "Draft could not be generated. Close and reopen to retry."
+                  : "Drafting..."}
               </p>
             ) : (
               <div className="mt-4 space-y-4">
@@ -316,7 +359,29 @@ export function ReviewCard({ task, onClose }: ReviewCardProps) {
           ) : null}
         </div>
 
-        <footer className="flex justify-end border-t border-line bg-paper px-5 py-4 sm:px-6">
+        <footer className="flex flex-col gap-3 border-t border-line bg-paper px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+            <button
+              type="button"
+              onClick={() => {
+                useStore.getState().resolveTask(task.id);
+                onClose();
+              }}
+              className="inline-flex min-h-11 items-center justify-center rounded-sm border border-line bg-card px-3 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-pine/40 hover:bg-pine/10 hover:text-pine sm:px-4"
+            >
+              Mark resolved
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                useStore.getState().archiveTask(task.id);
+                onClose();
+              }}
+              className="inline-flex min-h-11 items-center justify-center rounded-sm border border-line bg-card px-3 py-2.5 text-sm font-semibold text-muted transition-colors hover:border-steel/50 hover:bg-paper hover:text-ink sm:px-4"
+            >
+              Archive
+            </button>
+          </div>
           <ApprovalGate task={task} onApproved={onClose} />
         </footer>
       </section>
