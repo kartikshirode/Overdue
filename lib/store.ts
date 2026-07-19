@@ -33,6 +33,7 @@ export type StoredTask = Task & {
 type StoreState = {
   tasks: StoredTask[];
   clockOffsetMs: number;
+  ingestError: string | null;
 };
 
 type StoreActions = {
@@ -57,6 +58,35 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+// Thrown when the request never produced a usable response. Separating this
+// from an empty result is what lets the UI say something true.
+class ServiceError extends Error {
+  readonly status: number;
+
+  constructor(status: number) {
+    super(`Request failed with status ${status}.`);
+    this.name = "ServiceError";
+    this.status = status;
+  }
+}
+
+const SERVICE_DOWN_MESSAGE =
+  "The drafting service is not responding right now. Try again in a moment.";
+const RATE_LIMITED_MESSAGE =
+  "Too many requests just now. Wait a minute, then try again.";
+const REFUSED_MESSAGE =
+  "The service could not turn that into tasks. Try naming one thing plainly.";
+
+// Deliberately does not surface the server's own error text, which can carry
+// upstream provider detail.
+function failureMessage(error: unknown): string {
+  if (error instanceof ServiceError) {
+    return error.status === 429 ? RATE_LIMITED_MESSAGE : SERVICE_DOWN_MESSAGE;
+  }
+
+  return SERVICE_DOWN_MESSAGE;
+}
+
 async function postJson(path: string, body: unknown): Promise<unknown> {
   const response = await fetch(path, {
     method: "POST",
@@ -65,7 +95,7 @@ async function postJson(path: string, body: unknown): Promise<unknown> {
   });
 
   if (!response.ok) {
-    return null;
+    throw new ServiceError(response.status);
   }
 
   return response.json();
@@ -88,26 +118,35 @@ export const useStore = create<OverdueStore>()(
     (set, get) => ({
       tasks: [],
       clockOffsetMs: 0,
+      ingestError: null,
 
       ingest: async (dump) => {
+        set({ ingestError: null });
+
         try {
           const payload = await postJson("/api/extract", { dump });
           const candidates = parseCandidates(payload);
           if (candidates.length === 0) {
+            const reported = asRecord(payload)?.error;
+            set({
+              ingestError: typeof reported === "string" ? REFUSED_MESSAGE : null,
+            });
             return;
           }
 
+          const snapshot = get();
           const tasks = validateCandidates(
             candidates,
-            now(get().clockOffsetMs),
+            now(snapshot.clockOffsetMs),
+            snapshot.tasks.map((task) => task.id),
           );
           if (tasks.length === 0) {
             return;
           }
 
           set((state) => ({ tasks: [...state.tasks, ...tasks] }));
-        } catch {
-          return;
+        } catch (error) {
+          set({ ingestError: failureMessage(error) });
         }
       },
 
@@ -296,7 +335,7 @@ export const useStore = create<OverdueStore>()(
       },
 
       reset: () => {
-        set({ tasks: [], clockOffsetMs: 0 });
+        set({ tasks: [], clockOffsetMs: 0, ingestError: null });
       },
     }),
     {

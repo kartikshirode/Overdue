@@ -169,9 +169,32 @@ function buildProvenance(
   };
 }
 
+const ID_PATTERN = /^tsk_(\d+)$/;
+
+// Ids must continue past whatever the caller already holds, otherwise a second
+// ingest batch restarts at tsk_01 and collides with the first batch.
+function firstFreeNumber(existingIds: readonly string[]): number {
+  let highest = 0;
+
+  for (const id of existingIds) {
+    const match = ID_PATTERN.exec(id);
+    if (!match) {
+      continue;
+    }
+
+    const value = Number.parseInt(match[1], 10);
+    if (Number.isFinite(value) && value > highest) {
+      highest = value;
+    }
+  }
+
+  return highest + 1;
+}
+
 export function validateCandidates(
   candidates: TaskCandidate[],
   now: Date,
+  existingIds: readonly string[] = [],
 ): Task[] {
   const seen = new Set<string>();
   const accepted: TaskCandidate[] = [];
@@ -190,6 +213,8 @@ export function validateCandidates(
     accepted.push(candidate);
   }
 
+  const firstNumber = firstFreeNumber(existingIds);
+
   return accepted.map((candidate, index) => {
     const nextActionAt = resolveRelativeDate(
       `${candidate.raw_input} ${candidate.desired_outcome}`,
@@ -198,7 +223,7 @@ export function validateCandidates(
 
     return {
       ...candidate,
-      id: `tsk_${String(index + 1).padStart(2, "0")}`,
+      id: `tsk_${String(firstNumber + index).padStart(2, "0")}`,
       leverage: [],
       escalation_stage: 1,
       state: "drafted",

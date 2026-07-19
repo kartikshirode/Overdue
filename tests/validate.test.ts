@@ -21,3 +21,24 @@ test("drops low-confidence candidates", () => {
 test("dedupes by intent + counterparty", () => {
   expect(validateCandidates([base, { ...base }], new Date()).length).toBe(1);
 });
+
+test("continues ids past the ones the caller already holds", () => {
+  const at = new Date("2026-07-18T00:00:00Z");
+  const first = validateCandidates([base], at);
+  const second = validateCandidates(
+    [{ ...base, counterparty: { ...base.counterparty, name: "Northstar" } }],
+    at,
+    first.map((task) => task.id),
+  );
+
+  expect(second[0].id).toBe("tsk_02");
+
+  const ids = [...first, ...second].map((task) => task.id);
+  expect(new Set(ids).size).toBe(ids.length);
+});
+
+test("skips past a gap rather than reusing a freed id", () => {
+  const at = new Date("2026-07-18T00:00:00Z");
+  const out = validateCandidates([base], at, ["tsk_01", "tsk_07", "not_a_task"]);
+  expect(out[0].id).toBe("tsk_08");
+});

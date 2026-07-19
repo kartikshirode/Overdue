@@ -43,3 +43,6 @@ next-env.d.ts
 
 # Local audit artifacts
 .swarm-audit/
+
+# Agent worktrees
+.claude/worktrees/
