@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { DumpBar } from "@/components/DumpBar";
 import { EmptyState } from "@/components/EmptyState";
+import { ReviewCard } from "@/components/ReviewCard";
 import { TaskQueue } from "@/components/TaskQueue";
 import { useStore } from "@/lib/store";
 
@@ -21,6 +22,10 @@ export default function Home() {
     void useStore.getState().attachArtifact(id);
   }
 
+  const selectedTask = selectedId
+    ? tasks.find((task) => task.id === selectedId)
+    : undefined;
+
   return (
     <div className="min-h-screen bg-paper text-ink">
       <header className="border-b border-line">
@@ -37,10 +42,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main
-        className="mx-auto w-full max-w-5xl px-5 pb-16 sm:px-8"
-        data-selected-task={selectedId ?? undefined}
-      >
+      <main className="mx-auto w-full max-w-5xl px-5 pb-16 sm:px-8">
         {mounted && tasks.length === 0 ? <EmptyState /> : null}
 
         <DumpBar />
@@ -49,6 +51,13 @@ export default function Home() {
           <TaskQueue tasks={tasks} onReview={onReview} />
         ) : null}
       </main>
+
+      {selectedTask ? (
+        <ReviewCard
+          task={selectedTask}
+          onClose={() => setSelectedId(null)}
+        />
+      ) : null}
     </div>
   );
 }
