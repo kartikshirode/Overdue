@@ -242,7 +242,28 @@ export const useStore = create<OverdueStore>()(
       },
 
       seedDemo: () => {
-        set({ tasks: DEMO_TASKS.map((task) => ({ ...task })) });
+        const nextActionAt = new Date(
+          now(get().clockOffsetMs).getTime() + 2 * DAY_MS,
+        ).toISOString();
+        const tasks = DEMO_TASKS.map((task): StoredTask => ({
+          ...task,
+          counterparty: { ...task.counterparty },
+          leverage: task.leverage.map((item) => ({ ...item })),
+          missing_info: [...task.missing_info],
+          provenance: { ...task.provenance },
+          artifact: task.artifact
+            ? {
+                ...task.artifact,
+                leverage_used: task.artifact.leverage_used.map((item) => ({
+                  ...item,
+                })),
+              }
+            : undefined,
+          next_action_at:
+            task.state === "awaiting_reply" ? nextActionAt : null,
+        }));
+
+        set({ tasks });
       },
 
       reset: () => {
