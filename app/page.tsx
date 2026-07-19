@@ -6,6 +6,7 @@ import { DumpBar } from "@/components/DumpBar";
 import { EmptyState } from "@/components/EmptyState";
 import { ReviewCard } from "@/components/ReviewCard";
 import { TaskQueue } from "@/components/TaskQueue";
+import { TimeTravelControl } from "@/components/TimeTravelControl";
 import { useStore } from "@/lib/store";
 
 export default function Home() {
@@ -33,12 +34,7 @@ export default function Home() {
           <span className="font-mono text-sm font-semibold tracking-[0.2em]">
             OVERDUE
           </span>
-          <time
-            dateTime="2026-07-19"
-            className="font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-muted"
-          >
-            SIM: 2026-07-19
-          </time>
+          <TimeTravelControl />
         </div>
       </header>
 
