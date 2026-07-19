@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { isSafeActionUrl } from "@/lib/schema";
 import type { StoredTask } from "@/lib/store";
 import { useStore } from "@/lib/store";
 
@@ -94,7 +95,9 @@ export function ApprovalGate({ task, onApproved }: ApprovalGateProps) {
         return;
       }
       setConfirmation("Copied");
-    } else if (artifact.action_url) {
+    } else if (artifact.action_url && isSafeActionUrl(artifact.action_url)) {
+      // Re-checked here because a stored artifact can predate the schema rule.
+      // An unsafe link falls through to the copy branch instead of navigating.
       window.open(artifact.action_url, "_blank", "noopener,noreferrer");
       setConfirmation("Opened");
     } else {

@@ -4,20 +4,28 @@ import { lookupLeverage } from "../leverage";
 import {
   ArtifactSchema,
   LeverageItemSchema,
+  isSafeActionUrl,
   type Artifact,
   type ArtifactType,
   type EscalationStage,
   type LeverageItem,
   type Task,
 } from "../schema";
-import { CALL_SETTINGS, MODEL, openai } from "./client";
+import { CALL_SETTINGS, MODEL, getOpenAI } from "./client";
 
 const ModelArtifactSchema = z
   .object({
-    subject: z.string().nullable(),
-    body: z.string().min(1),
-    action_url: z.string().nullable(),
-    leverage: z.array(LeverageItemSchema),
+    subject: z.string().max(300).nullable(),
+    body: z.string().min(1).max(8000),
+    // A model-supplied link that is not https: or mailto: is dropped rather than
+    // rejected, so one bad url degrades the draft instead of failing it.
+    action_url: z
+      .string()
+      .nullable()
+      .transform((value) =>
+        value !== null && isSafeActionUrl(value) ? value : null,
+      ),
+    leverage: z.array(LeverageItemSchema).max(20),
   })
   .strict();
 
@@ -76,7 +84,7 @@ export async function generateArtifact(
     ? "model_fallback"
     : "curated_only";
 
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAI().chat.completions.create({
     model: MODEL,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
