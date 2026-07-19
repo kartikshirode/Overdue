@@ -11,7 +11,7 @@ Deadline: Tue 21 Jul 2026, 5:00 PM PT. Submit with hours to spare.
 - [ ] **Repo URL:** https://github.com/kartikshirode/Overdue
 - [ ] **Live URL for judges:** https://overdue-nine.vercel.app
 - [ ] **README with Codex collaboration notes:** done (README.md).
-- [ ] **Codex Session ID:** grab it from the Codex session where the build ran, paste into README.md and the Devpost form.
+- [x] **Codex Session ID:** `019f78ee-43b9-70c3-9429-98d1520a810f` (in README.md; paste into the Devpost form too).
 - [ ] **Track:** Apps for your life.
 
 ## Text description (paste into Devpost)

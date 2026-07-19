@@ -66,7 +66,7 @@ This project was built with Codex as the implementation agent across a single su
 - built the Zustand store, the whole UI (dump bar, queue, review panel, approval gate, escalation ladder, time-travel control), and the demo seed data
 - closed the resolve loop and did the accessibility and motion polish
 
-Codex Session ID: `PASTE_YOUR_CODEX_SESSION_ID_HERE`
+Codex Session ID: `019f78ee-43b9-70c3-9429-98d1520a810f`
 
 ## Run it locally
 
