@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { RequestError, classifyError } from "@/lib/api-error";
 import { logRouteError } from "@/lib/log-error";
 import { generateArtifact } from "@/lib/openai/artifact";
 import { allowRequest, clientKey } from "@/lib/rate-limit";
 import { EscalationStageSchema, TaskSchema } from "@/lib/schema";
 
 const MAX_BODY_BYTES = 24_000;
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Artifact generation failed.";
-}
 
 function isOversizedBody(request: Request): boolean {
   const declared = Number.parseInt(
@@ -29,12 +26,12 @@ export async function POST(request: Request) {
 
   try {
     if (isOversizedBody(request)) {
-      throw new Error("Request body is too large.");
+      throw new RequestError("Request body is too large.");
     }
 
     const body: unknown = await request.json();
     if (typeof body !== "object" || body === null) {
-      throw new Error("Request body must be an object.");
+      throw new RequestError("Request body must be an object.");
     }
 
     const fields = body as Record<string, unknown>;
@@ -45,9 +42,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ artifact }, { status: 200 });
   } catch (error) {
     logRouteError("api/artifact", error);
-    return NextResponse.json(
-      { artifact: null, error: errorMessage(error) },
-      { status: 200 },
-    );
+    const { status, message } = classifyError(error);
+    return NextResponse.json({ artifact: null, error: message }, { status });
   }
 }

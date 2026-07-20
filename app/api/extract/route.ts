@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { RequestError, classifyError } from "@/lib/api-error";
 import { logRouteError } from "@/lib/log-error";
 import { extractTasks } from "@/lib/openai/extract";
 import { allowRequest, clientKey } from "@/lib/rate-limit";
 
 const MAX_DUMP_CHARS = 4000;
 const MAX_BODY_BYTES = 16_000;
-
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Task extraction failed.";
-}
 
 function isOversizedBody(request: Request): boolean {
   const declared = Number.parseInt(
@@ -29,7 +26,7 @@ export async function POST(request: Request) {
 
   try {
     if (isOversizedBody(request)) {
-      throw new Error("Request body is too large.");
+      throw new RequestError("Request body is too large.");
     }
 
     const body: unknown = await request.json();
@@ -39,11 +36,11 @@ export async function POST(request: Request) {
         : null;
 
     if (typeof dump !== "string" || dump.trim() === "") {
-      throw new Error("Request body must include a non-empty string dump.");
+      throw new RequestError("Request body must include a non-empty string dump.");
     }
 
     if (dump.length > MAX_DUMP_CHARS) {
-      throw new Error(
+      throw new RequestError(
         `Dump is too long. Keep it under ${MAX_DUMP_CHARS} characters.`,
       );
     }
@@ -52,9 +49,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ candidates }, { status: 200 });
   } catch (error) {
     logRouteError("api/extract", error);
-    return NextResponse.json(
-      { candidates: [], error: errorMessage(error) },
-      { status: 200 },
-    );
+    const { status, message } = classifyError(error);
+    return NextResponse.json({ candidates: [], error: message }, { status });
   }
 }
