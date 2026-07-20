@@ -7,6 +7,14 @@ Built for OpenAI Build Week 2026, track: Apps for your life.
 
 To see it without typing anything, open the app and hit **Load demo**. That fills the queue with five real tasks and their drafts, no setup.
 
+## At a glance
+
+- Dump avoided chores in plain words, get a ready-to-send email, call script, or action link back.
+- Every draft carries real leverage (chargeback windows, cooling-off periods, consumer-protection clauses), each claim tagged with its source.
+- Ignored messages escalate on their own through three stages: polite, firm, formal.
+- The model drafts; deterministic code validates; you tap to authorize. Nothing sends by itself.
+- All state lives in your browser. No database, no accounts, nothing sensitive stored server-side.
+
 ## The problem
 
 Everyone carries a list of things they know how to do and still haven't done. The refund never claimed. The subscription still charging. The deposit the landlord never returned. The invoice unpaid for months.
@@ -52,6 +60,24 @@ All task state lives in localStorage. No database, no accounts, no server-side s
 
 Next.js App Router, TypeScript, Tailwind, Zustand, Zod, Vitest. The pure modules (validate, leverage, escalation) are unit tested.
 
+### Where things live
+
+```
+app/
+  api/extract/     turns a dump into task candidates (GPT-5, server-side)
+  api/artifact/    drafts the email/script/link for a task and stage (GPT-5)
+  page.tsx         the home screen: dump bar, queue, review modal
+lib/
+  schema.ts        Zod schemas and every enum, the single source of truth
+  validate.ts      pure gate: ids, confidence floor, dedupe, dates, provenance
+  leverage.ts      curated leverage rules keyed by intent, model fallback signal
+  escalation.ts    the state machine, stage timings, and the simulated clock
+  store.ts         Zustand store persisted to localStorage
+  demo.ts          five seed tasks with pre-baked artifacts, zero model calls
+components/         dump bar, queue, review card, approval gate, timeline, clock
+tests/             Vitest specs for the three pure modules and the route guards
+```
+
 ### Model
 
 The app calls OpenAI's GPT-5 through an OpenAI-compatible endpoint. It reads the key from `MODEL_API_KEY` and the base URL from `MODEL_BASE_URL`, both server-side only. Free access is GitHub Models, which is rate limited to about 10 requests a minute and 50 a day, so the demo path is built to run with no model calls and the model id sits in one constant for an easy swap.
@@ -80,8 +106,14 @@ npm run dev
 Then open http://localhost:3000 and hit Load demo, or type your own dump.
 
 ```bash
-npm test    # runs the unit tests for the pure logic
+npm test          # unit tests for the pure logic
+npm run build     # production build
+npx tsc --noEmit  # type check
 ```
+
+## Deploy
+
+It runs on Vercel with zero config. Import the repo, set `MODEL_API_KEY` and `MODEL_BASE_URL` in the project's environment variables, and deploy. The demo path makes no model calls, so the live link stays usable even under the GitHub Models rate limits.
 
 ## Safety
 
