@@ -210,7 +210,8 @@ export function ReviewCard({ task, onClose }: ReviewCardProps) {
                 aria-live="polite"
               >
                 {task.artifactError
-                  ? "Draft could not be generated. Close and reopen to retry."
+                  ? (task.artifactErrorMessage ??
+                    "Draft could not be generated. Close and reopen to retry.")
                   : "Drafting..."}
               </p>
             ) : (

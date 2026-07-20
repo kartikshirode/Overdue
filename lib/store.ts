@@ -27,6 +27,9 @@ const DAY_MS = 86_400_000;
 export type StoredTask = Task & {
   artifact?: Artifact;
   artifactError?: boolean;
+  // Set alongside artifactError so the draft panel can say why it failed
+  // (busy, misconfigured, off-schema) instead of one catch-all line.
+  artifactErrorMessage?: string;
   inFlightStage?: EscalationStage | null;
 };
 
@@ -74,14 +77,25 @@ const SERVICE_DOWN_MESSAGE =
   "The drafting service is not responding right now. Try again in a moment.";
 const RATE_LIMITED_MESSAGE =
   "Too many requests just now. Wait a minute, then try again.";
-const REFUSED_MESSAGE =
-  "The service could not turn that into tasks. Try naming one thing plainly.";
+const NOT_CONFIGURED_MESSAGE =
+  "The drafting service is not set up right now. This one is on us, not you.";
+const DRAFT_INVALID_MESSAGE =
+  "The draft came back malformed. Close and reopen to try again.";
 
-// Deliberately does not surface the server's own error text, which can carry
-// upstream provider detail.
+// Maps a failed request to the sentence the user sees. The status is the
+// signal, not the server's error text: the route already reduced the real
+// cause to a safe message, and the client stays authoritative about wording so
+// nothing from upstream leaks through the body. The point of ID-5 is that a
+// missing key, a busy provider, and a genuinely empty extraction now read as
+// three different things instead of all blaming the user's phrasing.
 function failureMessage(error: unknown): string {
   if (error instanceof ServiceError) {
-    return error.status === 429 ? RATE_LIMITED_MESSAGE : SERVICE_DOWN_MESSAGE;
+    if (error.status === 429) {
+      return RATE_LIMITED_MESSAGE;
+    }
+    if (error.status === 503) {
+      return NOT_CONFIGURED_MESSAGE;
+    }
   }
 
   return SERVICE_DOWN_MESSAGE;
@@ -127,10 +141,11 @@ export const useStore = create<OverdueStore>()(
           const payload = await postJson("/api/extract", { dump });
           const candidates = parseCandidates(payload);
           if (candidates.length === 0) {
-            const reported = asRecord(payload)?.error;
-            set({
-              ingestError: typeof reported === "string" ? REFUSED_MESSAGE : null,
-            });
+            // A 2xx with no usable candidates is a real empty extraction, not a
+            // failure. Any config or upstream error arrives as a non-2xx and is
+            // thrown by postJson, so it never reaches here. Leaving ingestError
+            // null lets DumpBar show its "nothing came back" prompt.
+            set({ ingestError: null });
             return;
           }
 
@@ -157,13 +172,15 @@ export const useStore = create<OverdueStore>()(
         }
 
         const stage = task.escalation_stage;
-        const markArtifactError = () => {
+        // An off-schema or mismatched response is not a transport failure, so it
+        // gets its own line rather than the network wording.
+        const markArtifactError = (message = DRAFT_INVALID_MESSAGE) => {
           set((state) => ({
             tasks: state.tasks.map((item) =>
               item.id === taskId &&
               item.escalation_stage === stage &&
               !item.artifact
-                ? { ...item, artifactError: true }
+                ? { ...item, artifactError: true, artifactErrorMessage: message }
                 : item,
             ),
           }));
@@ -172,7 +189,11 @@ export const useStore = create<OverdueStore>()(
         set((state) => ({
           tasks: state.tasks.map((item) =>
             item.id === taskId && !item.artifact
-              ? { ...item, artifactError: false }
+              ? {
+                  ...item,
+                  artifactError: false,
+                  artifactErrorMessage: undefined,
+                }
               : item,
           ),
         }));
@@ -204,8 +225,8 @@ export const useStore = create<OverdueStore>()(
                 : item,
             ),
           }));
-        } catch {
-          markArtifactError();
+        } catch (error) {
+          markArtifactError(failureMessage(error));
           return;
         }
       },

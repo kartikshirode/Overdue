@@ -51,16 +51,16 @@ Gotcha: motion is wrapped in a prefers-reduced-motion guard; `queue-card-enter` 
 ## app/api/
 
 ### app/api/extract/route.ts
-POST handler wrapping extractTasks. Validates that the body has a non-empty `dump` string.
+POST handler wrapping extractTasks. Per-IP rate limit (429), body-size and dump-length caps (RequestError -> 400), then extractTasks.
 Exports: POST(request): Promise<NextResponse>
 Used by: lib/store.ts (ingest)
-Gotcha: never throws to the client. All failures return `{ candidates: [], error }` with HTTP 200 so the UI degrades instead of crashing on a rate limit.
+Gotcha: failures return `{ candidates: [], error }` with a real status from lib/api-error classifyError (400/429/502/503), not the old always-200. The `error` string is a fixed safe message, never upstream or Zod text; the real cause is logged via lib/log-error.
 
 ### app/api/artifact/route.ts
-POST handler wrapping generateArtifact. Parses `task` with TaskSchema and `stage` with EscalationStageSchema.
+POST handler wrapping generateArtifact. Rate limit (429), body cap, then parses `task` with TaskSchema and `stage` with EscalationStageSchema.
 Exports: POST(request): Promise<NextResponse>
 Used by: lib/store.ts (attachArtifact)
-Gotcha: same never-crash contract, returning `{ artifact: null, error }` at HTTP 200.
+Gotcha: same contract as extract, returning `{ artifact: null, error }` with a classified status. Model output `action_url` is sanitised to null inside generateArtifact; ArtifactSchema still hard-rejects an unsafe one.
 
 ## lib/
 
@@ -90,9 +90,9 @@ Gotcha: every function returns new objects and never mutates input. Stage 3 is t
 
 ### lib/store.ts
 Zustand store persisted to localStorage; the seam between UI, the pure modules, and the two API routes.
-Exports: type StoredTask (Task + artifact?, artifactError?, inFlightStage?); type OverdueStore; useStore
+Exports: type StoredTask (Task + artifact?, artifactError?, artifactErrorMessage?, inFlightStage?); type OverdueStore; useStore
 Used by: app/page.tsx, components/DumpBar.tsx, components/EmptyState.tsx, components/ReviewCard.tsx, components/ApprovalGate.tsx, components/TimeTravelControl.tsx, lib/demo.ts (type only)
-Gotcha: persist key is `overdue-v1`, so any breaking schema change needs a new key or stale local data will rehydrate. `approveTask` guards on inFlightStage to prevent double sends; `runTick` clears the artifact of escalated tasks and refetches at the new stage (one live model call per escalation).
+Gotcha: persist key is `overdue-v1`, so any breaking schema change needs a new key or stale local data will rehydrate. `approveTask` guards on inFlightStage to prevent double sends; `runTick` clears the artifact of escalated tasks and refetches at the new stage (one live model call per escalation). `postJson` throws ServiceError on any non-2xx, so config/upstream failures land in the catch and set a specific ingestError or artifactErrorMessage; an empty candidate list at 2xx is a genuine empty extraction, not an error.
 
 ### lib/demo.ts
 Five realistic seed tasks with pre-baked artifacts so the demo runs with zero model calls.
@@ -103,6 +103,24 @@ Gotcha: validates every task and artifact against TaskSchema/ArtifactSchema at m
 ### lib/utils.ts
 shadcn class helper (clsx + tailwind-merge).
 Exports: cn(...inputs: ClassValue[]): string
+
+### lib/api-error.ts
+Maps a thrown error to an HTTP status and a client-safe message. Own-validation RequestError travels back as 400 verbatim; Zod, ModelConfigError, upstream 429 and everything else map to fixed messages so upstream/provider text never leaks.
+Exports: RequestError (class); classifyError(error): { status, message }; ClassifiedError (type)
+Used by: app/api/extract/route.ts, app/api/artifact/route.ts
+Gotcha: the message is deliberately not the error's own text except for RequestError. Do not pass a Zod or provider message straight through; that is the whole point of the file.
+
+### lib/rate-limit.ts
+In-memory per-IP token bucket shared by both model routes. Sliding minute/hour/day windows tuned just under the provider ceiling.
+Exports: allowRequest(key, atMs?): boolean; clientKey(request): string; resetRateLimit() (test-only); PER_MINUTE_LIMIT, PER_HOUR_LIMIT, PER_DAY_LIMIT
+Used by: app/api/extract/route.ts, app/api/artifact/route.ts, tests/rate-limit.test.ts
+Gotcha: per serverless instance and x-forwarded-for is spoofable, so it is a speed bump, not access control. The day cap is the one guarding the ~50/day quota.
+
+### lib/log-error.ts
+Server-side failure logging for the two routes. Reduces a Zod error to its issue paths and truncates other messages so a dump or task fields never reach the logs.
+Exports: logRouteError(route, error): void
+Used by: app/api/extract/route.ts, app/api/artifact/route.ts
+Gotcha: keep it content-free. The README promises nothing sensitive is logged; only name, truncated message and status go out.
 
 ## lib/openai/
 
@@ -200,6 +218,15 @@ Covers approve scheduling next_action_at five days out, tick escalating an overd
 
 ### tests/schema.test.ts
 Covers TaskCandidateSchema accepting a valid candidate and rejecting a bad intent.
+
+### tests/action-url.test.ts
+Covers isSafeActionUrl accepting https/mailto and rejecting dangerous schemes, and ArtifactSchema rejecting an unsafe action_url.
+
+### tests/rate-limit.test.ts
+Covers the per-minute, per-hour and per-day caps and per-client keying. Hand-stubs Request since jsdom has no constructor.
+
+### tests/api-error.test.ts
+Covers classifyError: RequestError travels back as 400, while Zod, ModelConfigError (503) and upstream (429/502) messages never reach the caller.
 
 ### tests/smoke.test.ts
 Trivial sanity test from scaffolding.
