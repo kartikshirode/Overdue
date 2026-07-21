@@ -102,11 +102,35 @@ And a rate limit can be a design brief. Being forced to make the demo path work 
 
 ## Built with
 
+Enter these in order. Devpost shows them in the order you add them, and the first four are the ones that answer the "did it use the required models" gate without a judge having to read anything.
+
 ```
-typescript, next.js, react, tailwindcss, zustand, zod, vitest, vercel,
-openai, gpt-5, codex, github-models, structured-outputs, shadcn-ui,
-turbopack, eslint, node.js, javascript, css, html, localstorage
+openai
+gpt-5
+codex
+github-models
+next.js
+react
+typescript
+tailwindcss
+vercel
+zustand
+zod
+vitest
+shadcn-ui
+node.js
+javascript
+html
+css
+ai
+llm
+structured-outputs
+localstorage
+eslint
+turbopack
 ```
+
+23 of the 25 allowed. If autocomplete does not offer `gpt-5`, `github-models`, `structured-outputs` or `shadcn-ui`, add them as new tags rather than dropping them. The last four in the list are the ones to cut if you want it tighter.
 
 ## Try it out
 
