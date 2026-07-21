@@ -107,9 +107,12 @@ Then open http://localhost:3000 and hit Load demo, or type your own dump.
 
 ```bash
 npm test          # unit tests for the pure logic
+npm run lint      # eslint
 npm run build     # production build
 npx tsc --noEmit  # type check
 ```
+
+Typing the dump used in the demo video fills the queue from the seed tasks with no model call, so the app is worth a look even with no key set. Any other dump goes to the model as normal.
 
 ## Deploy
 
@@ -122,3 +125,7 @@ It runs on Vercel with zero config. Import the repo, set `MODEL_API_KEY` and `MO
 - Leverage carries a source and a confidence. Model-sourced claims are hedged and shown as worth checking, never as settled fact or legal advice.
 - v1 does nothing irreversible: no payments, no filings, no auto-send.
 - No unnecessary persistence, and nothing sensitive written to logs.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
