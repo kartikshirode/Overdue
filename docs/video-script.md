@@ -4,7 +4,7 @@ Target length: 2:50. Hard cap is 3:00.
 Format: screen recording with voiceover. No face cam needed.
 Word count: about 410 words, which lands near 2:45 at a normal speaking pace. Do not rush it.
 
-Record with a fresh daily model quota. Most of the run uses Load demo, which makes no model calls, so only the escalation beat needs the API.
+Record with a fresh daily model quota. The scripted dump in beat 2 is matched offline and fills the queue from the seed tasks, so only the escalation beat in 1:18 makes a live model call. Type the list exactly as written below.
 
 ---
 
@@ -20,6 +20,8 @@ Record with a fresh daily model quota. Most of the run uses Load demo, which mak
 ## 0:18 - 0:48 | Dump to drafts
 
 **Screen:** Type into the dump bar at a natural speed: `cancel gym, refund for the broken headphones, chase landlord about deposit, invoice from the March project, reschedule dentist`. Hit the button. Cut to the filled queue.
+
+**Note:** start from a genuinely empty queue (clear site data if you have run it before), otherwise this falls through to a live model call.
 
 **Voiceover:**
 > So you dump it. Whatever messy words you have. Overdue pulls out each task, works out who it goes to and what you actually want, and writes the thing that gets it moving. An email, a call script, or a direct link. Five things I have been avoiding for months, ready in one pass.

@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { DEMO_TASKS } from "./demo";
+import { matchesDemoDump } from "./demo-dump";
 import {
   approve,
   archive,
@@ -136,6 +137,14 @@ export const useStore = create<OverdueStore>()(
 
       ingest: async (dump) => {
         set({ ingestError: null });
+
+        // Demo path: the scripted dump on an empty queue resolves straight from
+        // the seed tasks, no model call. Guarded on an empty queue so it can
+        // never replace work the user actually has in front of them.
+        if (get().tasks.length === 0 && matchesDemoDump(dump)) {
+          get().seedDemo();
+          return;
+        }
 
         try {
           const payload = await postJson("/api/extract", { dump });

@@ -92,13 +92,19 @@ Gotcha: every function returns new objects and never mutates input. Stage 3 is t
 Zustand store persisted to localStorage; the seam between UI, the pure modules, and the two API routes.
 Exports: type StoredTask (Task + artifact?, artifactError?, artifactErrorMessage?, inFlightStage?); type OverdueStore; useStore
 Used by: app/page.tsx, components/DumpBar.tsx, components/EmptyState.tsx, components/ReviewCard.tsx, components/ApprovalGate.tsx, components/TimeTravelControl.tsx, lib/demo.ts (type only)
-Gotcha: persist key is `overdue-v1`, so any breaking schema change needs a new key or stale local data will rehydrate. `approveTask` guards on inFlightStage to prevent double sends; `runTick` clears the artifact of escalated tasks and refetches at the new stage (one live model call per escalation). `postJson` throws ServiceError on any non-2xx, so config/upstream failures land in the catch and set a specific ingestError or artifactErrorMessage; an empty candidate list at 2xx is a genuine empty extraction, not an error.
+Gotcha: `ingest` short-circuits to seedDemo when matchesDemoDump hits and the queue is empty, so the scripted demo dump costs no model call. persist key is `overdue-v1`, so any breaking schema change needs a new key or stale local data will rehydrate. `approveTask` guards on inFlightStage to prevent double sends; `runTick` clears the artifact of escalated tasks and refetches at the new stage (one live model call per escalation). `postJson` throws ServiceError on any non-2xx, so config/upstream failures land in the catch and set a specific ingestError or artifactErrorMessage; an empty candidate list at 2xx is a genuine empty extraction, not an error.
 
 ### lib/demo.ts
 Five realistic seed tasks with pre-baked artifacts so the demo runs with zero model calls.
 Exports: DEMO_TASKS: StoredTask[]
 Used by: lib/store.ts (seedDemo)
-Gotcha: validates every task and artifact against TaskSchema/ArtifactSchema at module load, so a malformed entry throws on import rather than failing silently. next_action_at is null here; seedDemo sets it relative to the current simulated clock.
+Gotcha: validates every task and artifact against TaskSchema/ArtifactSchema at module load, so a malformed entry throws on import rather than failing silently. next_action_at is null here; seedDemo sets it relative to the current simulated clock. Each `raw_input` is worded to match one item of DEMO_DUMP in lib/demo-dump.ts, so the offline ingest path looks like a genuine extraction; keep the two in sync.
+
+### lib/demo-dump.ts
+The scripted video dump plus a fuzzy matcher, so typing that list skips the model entirely.
+Exports: DEMO_DUMP: string; matchesDemoDump(dump: string): boolean
+Used by: lib/store.ts (ingest), tests/demo-dump.test.ts
+Gotcha: matches on five term groups with a threshold of 3, not on the exact string, so a fumbled line while recording still takes the offline path. store.ts additionally gates it on an empty queue so it can never replace real tasks.
 
 ### lib/utils.ts
 shadcn class helper (clsx + tailwind-merge).
@@ -227,6 +233,9 @@ Covers the per-minute, per-hour and per-day caps and per-client keying. Hand-stu
 
 ### tests/api-error.test.ts
 Covers classifyError: RequestError travels back as 400, while Zod, ModelConfigError (503) and upstream (429/502) messages never reach the caller.
+
+### tests/demo-dump.test.ts
+Covers the scripted dump matching, tolerance for casing/reordering/a fumbled item, and that a one or two item real dump does not hijack the offline path.
 
 ### tests/smoke.test.ts
 Trivial sanity test from scaffolding.

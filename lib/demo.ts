@@ -38,7 +38,7 @@ function demoProvenance(): Record<string, Provenance> {
 const DEMO_TASK_DATA: DemoTask[] = [
   {
     id: "tsk_01",
-    raw_input: "refund the defective boAt headphones",
+    raw_input: "refund for the broken headphones",
     intent: "refund_request",
     counterparty: {
       name: "boAt Support",
@@ -68,7 +68,7 @@ const DEMO_TASK_DATA: DemoTask[] = [
   },
   {
     id: "tsk_02",
-    raw_input: "cancel the gym membership before another renewal",
+    raw_input: "cancel gym",
     intent: "subscription_cancel",
     counterparty: {
       name: "FitCore Gym",
@@ -98,7 +98,7 @@ const DEMO_TASK_DATA: DemoTask[] = [
   },
   {
     id: "tsk_03",
-    raw_input: "chase the landlord for the tenancy deposit",
+    raw_input: "chase landlord about deposit",
     intent: "deposit_return",
     counterparty: {
       name: "Mr Mehta",
@@ -128,7 +128,7 @@ const DEMO_TASK_DATA: DemoTask[] = [
   },
   {
     id: "tsk_04",
-    raw_input: "reschedule the dentist appointment",
+    raw_input: "reschedule dentist",
     intent: "reschedule",
     counterparty: {
       name: "Dr Shah Dental Clinic",
@@ -158,7 +158,7 @@ const DEMO_TASK_DATA: DemoTask[] = [
   },
   {
     id: "tsk_05",
-    raw_input: "chase Northstar Studio for invoice INV-2047",
+    raw_input: "invoice from the March project",
     intent: "invoice_chase",
     counterparty: {
       name: "Northstar Studio",
@@ -166,9 +166,9 @@ const DEMO_TASK_DATA: DemoTask[] = [
       contact: "accounts@northstarstudio.example",
       source: "inferred",
     },
-    desired_outcome: "Receive payment for overdue invoice INV-2047",
+    desired_outcome: "Receive payment for the overdue March project invoice",
     leverage: copyLeverage("invoice_chase"),
-    missing_info: [],
+    missing_info: ["invoice_number", "invoice_date"],
     artifact_type: "action_link",
     escalation_stage: 1,
     state: "drafted",
@@ -179,10 +179,10 @@ const DEMO_TASK_DATA: DemoTask[] = [
       task_id: "tsk_05",
       stage: 1,
       artifact_type: "action_link",
-      subject: "Invoice INV-2047 is overdue",
-      body: "Open the email draft and ask Northstar Studio to pay invoice INV-2047 within five days.",
+      subject: "March project invoice is overdue",
+      body: "Open the email draft and ask Northstar Studio to settle the outstanding March project invoice within five days.",
       action_url:
-        "mailto:accounts@northstarstudio.example?subject=Invoice%20INV-2047%20is%20overdue",
+        "mailto:accounts@northstarstudio.example?subject=March%20project%20invoice%20is%20overdue",
       leverage_used: copyLeverage("invoice_chase"),
     },
   },
