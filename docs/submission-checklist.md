@@ -4,15 +4,26 @@ Deadline: Tue 21 Jul 2026, 5:00 PM PT. Submit with hours to spare.
 
 ## Required fields
 
-- [ ] **Project name:** Overdue
-- [ ] **One-line summary:** Overdue turns the things you have been avoiding into the first move that gets them done, and follows up on its own when nobody replies.
-- [ ] **Text description:** see the block below.
-- [ ] **Demo video:** under 3 minutes, public on YouTube, with audio, covering what it does and how Codex and GPT-5 were used. No third-party trademarks or copyrighted music.
-- [ ] **Repo URL:** https://github.com/kartikshirode/Overdue
-- [ ] **Live URL for judges:** https://overdue-nine.vercel.app
-- [ ] **README with Codex collaboration notes:** done (README.md).
+- [x] **Project name:** Overdue
+- [x] **One-line summary:** Overdue turns the things you have been avoiding into the first move that gets them done, and follows up on its own when nobody replies.
+- [x] **Text description:** see the block below.
+- [ ] **Demo video:** under 3 minutes, public on YouTube, with audio, covering what it does and how Codex and GPT-5 were used. No third-party trademarks or copyrighted music. Script is in `docs/video-script.md`. **Still to record and upload.**
+- [x] **Repo URL:** https://github.com/kartikshirode/Overdue
+- [x] **Live URL for judges:** https://overdue-nine.vercel.app
+- [x] **README with Codex collaboration notes:** done (README.md).
 - [x] **Codex Session ID:** `019f78ee-43b9-70c3-9429-98d1520a810f` (in README.md; paste into the Devpost form too).
-- [ ] **Track:** Apps for your life.
+- [x] **Track:** Apps for your life.
+
+## Repo state
+
+Verified green on the submission build:
+
+- `npm run lint` clean, `npm test` 31 passing, `npm run build` succeeds, `npx tsc --noEmit` clean.
+- No secrets tracked. Only `.env.local.example` is committed and `.env*` is ignored.
+- MIT LICENSE added. Default Next.js scaffolding assets removed.
+- The scripted demo dump resolves offline, so neither the video nor a judge's first run depends on model quota.
+
+Left to do: record the video, upload it public on YouTube, then fill the Devpost form.
 
 ## Text description (paste into Devpost)
 

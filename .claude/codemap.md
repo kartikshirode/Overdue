@@ -42,7 +42,7 @@ Gotcha: font CSS variable names (--font-display/-body/-mono) are consumed by app
 Client home screen. Wires the store to the header clock, dump bar, queue, and review modal.
 Exports: default Home()
 Used by: Next App Router (implicit)
-Gotcha: renders queue/empty state only after a `mounted` flag, because the persisted store rehydrates on the client and would otherwise cause a hydration mismatch. `onReview` also prefetches the draft via `attachArtifact`.
+Gotcha: renders queue/empty state only once `useHydrated()` is true, because the persisted store rehydrates on the client and would otherwise cause a hydration mismatch. `onReview` also prefetches the draft via `attachArtifact`.
 
 ### app/globals.css
 Tailwind v4 entry: maps the six design tokens into the theme, sets paper background and ochre focus ring, and defines the queue card entrance and resolve recede animations.
@@ -105,6 +105,12 @@ The scripted video dump plus a fuzzy matcher, so typing that list skips the mode
 Exports: DEMO_DUMP: string; matchesDemoDump(dump: string): boolean
 Used by: lib/store.ts (ingest), tests/demo-dump.test.ts
 Gotcha: matches on five term groups with a threshold of 3, not on the exact string, so a fumbled line while recording still takes the offline path. store.ts additionally gates it on an empty queue so it can never replace real tasks.
+
+### lib/use-hydrated.ts
+Hydration guard: false during SSR and the hydration pass, true afterwards.
+Exports: useHydrated(): boolean
+Used by: app/page.tsx, components/TimeTravelControl.tsx
+Gotcha: built on useSyncExternalStore with a false server snapshot, deliberately not a setState-in-effect mounted flag, which the react-hooks/set-state-in-effect lint rule rejects. Anything reading persisted store state must gate on this or SSR markup will not match.
 
 ### lib/utils.ts
 shadcn class helper (clsx + tailwind-merge).
@@ -194,7 +200,7 @@ Used by: components/ReviewCard.tsx
 Header control showing the simulated date and advancing it to drive real escalation.
 Exports: TimeTravelControl()
 Used by: app/page.tsx
-Gotcha: renders the date only after mount (placeholder "SIM: ----------" before) to keep SSR markup stable. `advanceDays(5)` runs the real tick, so each escalation triggers a live artifact regeneration.
+Gotcha: renders the date only once `useHydrated()` is true (placeholder "SIM: ----------" before) to keep SSR markup stable. `advanceDays(5)` runs the real tick, so each escalation triggers a live artifact regeneration.
 
 ## components/ui/
 
