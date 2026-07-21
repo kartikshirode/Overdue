@@ -26,6 +26,8 @@ Built with Codex as the implementation agent across one sustained session, with 
 
 ## Demo video beats (under 3 minutes)
 
+Full shot-by-shot script with the voiceover lines is in `docs/video-script.md`. It rebalances the beats below to give the Codex story more room, since that is a scored criterion.
+
 1. 0:00-0:20 The problem, as a list everyone recognizes.
 2. 0:20-0:50 Type five dreaded things, cut to five finished artifacts. (Fresh model quota, or start from Load demo.)
 3. 0:50-1:20 Open one. Show the leverage clause. Edit a field. Approve.
