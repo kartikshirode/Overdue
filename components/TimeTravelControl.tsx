@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { now } from "@/lib/escalation";
 import { useStore } from "@/lib/store";
+import { useHydrated } from "@/lib/use-hydrated";
 
 export function TimeTravelControl() {
   const clockOffsetMs = useStore((state) => state.clockOffsetMs);
   const advanceDays = useStore((state) => state.advanceDays);
-  const [mounted, setMounted] = useState(false);
+  const hydrated = useHydrated();
   const [isAdvancing, setIsAdvancing] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const simulatedDate = mounted
+  const simulatedDate = hydrated
     ? now(clockOffsetMs).toISOString().slice(0, 10)
     : null;
 

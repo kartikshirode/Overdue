@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { DumpBar } from "@/components/DumpBar";
 import { EmptyState } from "@/components/EmptyState";
@@ -8,15 +8,12 @@ import { ReviewCard } from "@/components/ReviewCard";
 import { TaskQueue } from "@/components/TaskQueue";
 import { TimeTravelControl } from "@/components/TimeTravelControl";
 import { useStore } from "@/lib/store";
+import { useHydrated } from "@/lib/use-hydrated";
 
 export default function Home() {
   const tasks = useStore((state) => state.tasks);
-  const [mounted, setMounted] = useState(false);
+  const hydrated = useHydrated();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   function onReview(id: string) {
     setSelectedId(id);
@@ -39,11 +36,11 @@ export default function Home() {
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-5 pb-16 sm:px-8">
-        {mounted && tasks.length === 0 ? <EmptyState /> : null}
+        {hydrated && tasks.length === 0 ? <EmptyState /> : null}
 
         <DumpBar />
 
-        {mounted && tasks.length > 0 ? (
+        {hydrated && tasks.length > 0 ? (
           <TaskQueue tasks={tasks} onReview={onReview} />
         ) : null}
       </main>
