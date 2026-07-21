@@ -6,7 +6,7 @@ import type { FormEvent } from "react";
 import { useStore } from "@/lib/store";
 
 const PLACEHOLDER =
-  "cancel my gym membership, refund the broken headphones, chase the landlord about my deposit";
+  "Your thoughts..";
 
 export function DumpBar() {
   const ingest = useStore((state) => state.ingest);
